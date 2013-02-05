@@ -7,6 +7,6 @@ port = None
 
 if 'PORT' in os.environ:
     host = '0.0.0.0'
-    port = int(os.environ['PORT']
+    port = int(os.environ['PORT'])
 
 app.run(host=host, port=port)
