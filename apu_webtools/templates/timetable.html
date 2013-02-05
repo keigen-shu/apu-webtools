@@ -1,0 +1,22 @@
+{% extends "_base.html" %}
+
+{% block title %}Intake timetable{% endblock %}
+
+{% block content %}
+<div id="timetable">
+    <h1>Time-table for {{ intake }}</h1>
+    <p>I will not be held responsible for the inaccuracies of this table.</p>
+    <table>
+        <tbody>
+            <tr>
+                <th>Time</th>
+                <th>Location</th>
+                <th>Module</th>
+                <th>Lecturer</th>
+            </tr>
+            {{ table|safe }}
+        </tbody>
+    </table>
+    <p class="date">Last modified: {{ modified }}</p>
+</div>
+{% endblock %}
