@@ -56,7 +56,11 @@ body {
     font-size: 12px;
 }
 
-p {
+em {
+    font-weight: bold;
+}
+
+p, li{
     margin-top: 0.4em;
     margin-bottom: 0.4em;
     line-height: 1.2em;
@@ -110,7 +114,7 @@ th {
 
 th, td {
     border: 1px solid black;
-    padding: 0.4em 1.2em 0.4em 1.2em;
+    padding: 6px 18px 6px 18px;
 }
 
 tr.section {

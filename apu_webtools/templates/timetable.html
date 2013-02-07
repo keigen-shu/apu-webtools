@@ -5,7 +5,30 @@
 {% block content %}
 <div id="timetable">
     <h1>Time-table for {{ intake }}</h1>
-    <p>I will not be held responsible for the inaccuracies of this table.</p>
+    <p>You can bookmark this page to get the
+    {% if week > 0 %}
+    next {% if week > 1 %}{{ week }} weeks'{% else %}week's{% endif %}
+    {% elif week < 0 %}
+    previous {% if week < -1 %}{{ -week }} weeks'{% else %}week's{% endif %}
+    {% else %}
+    current week's
+    {% endif %}
+    timetable.</p>
+
+    <p style="float: left; width: 33%; text-align: left;"><a href={{ url_for('timetable', intake=intake, week=week-1) }}>Previous Week</a></p>
+    <p style="float: left; width: 33%; text-align: center;"><a href={{ url_for('timetable', intake=intake, week=0) }}>Now</a></p>
+    <p style="float: left; width: 33%; text-align: right;"><a href={{ url_for('timetable', intake=intake, week=week+1) }}>Next Week</a></p>
+
+    {% if table == None %}
+    <p><em>
+
+        {% if modified == None %}
+        Timetable not published yet or unavailable.
+        {% else %}
+        There are no classes.
+        {% endif %}
+    </em></p>
+    {% else %}
     <table>
         <tbody>
             <tr>
@@ -17,6 +40,19 @@
             {{ table|safe }}
         </tbody>
     </table>
-    <p class="date">Last modified: {{ modified }}</p>
+    {% endif %}
+    <p class="date">
+    {% if modified == None %}
+    Timetable not available
+    {% else %}
+    Last modified: {{ modified }}
+    {% endif %}
+    </p>
+
+    <p class="disclaimer">
+    This site and it's creator shall not be held liable for any case of lateness
+    or absence due to misinformation with or direct or indirect relation to this
+    page.
+    </p>
 </div>
 {% endblock %}

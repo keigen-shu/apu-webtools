@@ -1,0 +1,29 @@
+{% extends "_base.html" %}
+
+{% block title %}Intake list{% endblock %}
+
+{% block content %}
+<div id="timetable">
+    <h1>Intake list</h1>
+    <p>Select an intake from below. If you don't like to scan the list, just put your intake ID on the link address.</p>
+
+    <table>
+        <tbody>
+            <tr>
+                {% for group in groups %}
+                <th>{{ group }}</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                {% for intake_list in intake_lists %}
+                <td><ul>
+                        {% for intake in intake_list %}
+                        <li><a href="{{ url_for('timetable_now', intake=intake) }}">{{ intake }}</a></li>
+                        {% endfor %}
+                </ul></td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}
