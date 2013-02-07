@@ -4,6 +4,7 @@
 
 {% block content %}
 <div id="timetable">
+    <p><a href="{{ url_for('timetable_list') }}">Go back to intake list</a></p>
     <h1>Time-table for {{ intake }}</h1>
     <p>You can bookmark this page to get the
     {% if week > 0 %}
@@ -15,9 +16,9 @@
     {% endif %}
     timetable.</p>
 
-    <p style="float: left; width: 33%; text-align: left;"><a href={{ url_for('timetable', intake=intake, week=week-1) }}>Previous Week</a></p>
-    <p style="float: left; width: 33%; text-align: center;"><a href={{ url_for('timetable', intake=intake, week=0) }}>Now</a></p>
-    <p style="float: left; width: 33%; text-align: right;"><a href={{ url_for('timetable', intake=intake, week=week+1) }}>Next Week</a></p>
+    <p style="float: left; width: 33%; text-align: left;"><a href="{{ url_for('timetable', intake=intake, week=week-1) }}">Previous Week</a></p>
+    <p style="float: left; width: 33%; text-align: center;"><a href="{{ url_for('timetable', intake=intake, week=0) }}">Now</a></p>
+    <p style="float: left; width: 33%; text-align: right;"><a href="{{ url_for('timetable', intake=intake, week=week+1) }}">Next Week</a></p>
 
     {% if table == None %}
     <p><em>
