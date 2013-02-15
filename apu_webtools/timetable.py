@@ -70,7 +70,7 @@ def get_timetable(intake, week_inc=0, filters=None):
     page = response.read()
 
     # cut out the time table from the whole page
-    s = page.find('<tr><th>Date</th><th>Time</th><th>Classroom</th><th>Location</th><th>Subject / Module</th><th>Lecturer</th></tr>', 1500) + 120
+    s = page.find('<tr><th>Date</th><th>Time</th><th>Classroom</th><th>Location</th><th>Subject / Module</th><th>Lecturer</th></tr>') + 100
     e = page.find('<p class="modified-date" >', s)
 
     if s == -1 or e == -1:
