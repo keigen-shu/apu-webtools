@@ -50,7 +50,7 @@ def get_timetable_intake_list():
     return { 'groups': groups, 'intake_lists': intake_lists }
 
 
-def get_timetable(intake, week_inc=0, filters=None):
+def get_timetable(intake, week_inc=0):
     # find out the Monday date of the week we want
     week = datetime.date.today()
     week = week + datetime.timedelta(days=-week.weekday(), weeks=week_inc)
@@ -59,7 +59,7 @@ def get_timetable(intake, week_inc=0, filters=None):
     url = 'http://webspace.apiit.edu.my/intake-timetable/intake-result.php'
     data = urllib.urlencode({
         'week': week.isoformat() + '.xml',
-        'selectIntakeAll': intake 
+        'selectIntakeAll': intake
         })
 
     try:
@@ -70,7 +70,7 @@ def get_timetable(intake, week_inc=0, filters=None):
     page = response.read()
 
     # cut out the time table from the whole page
-    s = page.find('<tr><th>Date</th><th>Time</th><th>Classroom</th><th>Location</th><th>Subject / Module</th><th>Lecturer</th></tr>') + 100
+    s = page.find('<tr><th>Date</th><th>Time</th><th>Classroom</th><th>Location</th><th>Subject / Module</th><th>Lecturer</th></tr>') + 100 # increment to skip past first <tr>
     e = page.find('<p class="modified-date" >', s)
 
     if s == -1 or e == -1:
@@ -79,20 +79,20 @@ def get_timetable(intake, week_inc=0, filters=None):
     section = page[s:e]
 
     # extract and print data
-    matches = re.findall(r'(<tr> (?:<td> [\s\w:.,\-\/]+ </td> ){6}?</tr>)', section)
+    matches = re.findall(r'(<tr> (?:<td> [\s\w:.,\-\/@]+ </td> ){6}?</tr>)', section)
     modified = re.findall(r'Last modified: ([\s\w:]+)</p>', page[e:e+128])
-    
+
     if len(modified) == 0:
         modified = None
     else:
         modified = modified[0].strip()
-    
+
     last_date = str()
     table     = str()
 
     if len(matches) == 0:
         table = None
-    else: 
+    else:
         for entry in matches:
             fields = re.findall(r'(?:<td> ([\s\w:.,\-\/]+) </td> )', entry)
 

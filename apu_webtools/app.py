@@ -3,12 +3,6 @@ from flask import Flask, render_template, request, url_for
 from apu_webtools.timetable import get_timetable, get_timetable_intake_list
 
 app = Flask(__name__)
-"""
-@app.route("/")
-def root():
-    table = get_table('UC2F1301SE')
-    return render_template('timetable.html', entries=table['entries'], modified=table['last_modified'])
-"""
 
 @app.route("/timetable")
 def timetable_list():
@@ -22,4 +16,4 @@ def timetable(intake, week):
 
 @app.route("/timetable/<intake>")
 def timetable_now(intake):
-    return timetable(intake, 0);
+    return timetable(intake, 0)
