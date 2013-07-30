@@ -16,7 +16,7 @@
             </tr>
             <tr>
                 {% for intake_list in intake_lists %}
-                <td><ul>
+                <td><ul style="list-style:none;">
                         {% for intake in intake_list %}
                         <li><a href="{{ url_for('timetable_now', intake=intake) }}">{{ intake }}</a></li>
                         {% endfor %}

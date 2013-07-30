@@ -3,15 +3,16 @@
 
 # That is all the configuration needed. The script will take it from here.
 from socket import timeout
-from sys import argv
 import datetime
 import re
 import urllib
 
+
 def get_timetable_intake_list():
     # send request and get page
     try:
-        response = urllib.urlopen('http://webspace.apiit.edu.my/intake-timetable/')
+        response = urllib.urlopen(
+            'http://webspace.apiit.edu.my/intake-timetable/')
     except timeout:
         exit('Error: URL request timeout')
 
@@ -33,8 +34,22 @@ def get_timetable_intake_list():
     if len(matches) == 0:
         exit('Host intake list is empty')
 
-    groups  = [  'UCDF / UCFF',         'UC1F',    'UC2F',    'UC3F',    'UC4F',    'UCM / UCP',          'Others']
-    regexes = [ r'(UCD[12]?F)|(UCFF)', r'(UC1F)', r'(UC2F)', r'(UC3F)', r'(UC4F)', r'(UCM)|(UC[123]?P)', r'.+' ]
+    groups = [
+        'UCM / UCP',
+        'UCDF / UCFF',
+        'UC1F',
+        'UC2F',
+        'UC3F',
+        'UC4F / Others'
+    ]
+    regexes = [
+        r'(UCM)|(UC[123]?P)',
+        r'(UCD[12]?F)|(UCFF)',
+        r'(UC1F)',
+        r'(UC2F)',
+        r'(UC3F)',
+        r'.+'
+    ]
 
     intake_lists = []
 
@@ -47,7 +62,10 @@ def get_timetable_intake_list():
                 intake_lists[i].append(intake)
                 break
 
-    return { 'groups': groups, 'intake_lists': intake_lists }
+    return {
+        'groups': groups,
+        'intake_lists': intake_lists
+    }
 
 
 def get_timetable(intake, week_inc=0):
@@ -60,7 +78,7 @@ def get_timetable(intake, week_inc=0):
     data = urllib.urlencode({
         'week': week.isoformat() + '.xml',
         'selectIntakeAll': intake
-        })
+    })
 
     try:
         response = urllib.urlopen(url, data)
@@ -70,7 +88,13 @@ def get_timetable(intake, week_inc=0):
     page = response.read()
 
     # cut out the time table from the whole page
-    s = page.find('<tr><th>Date</th><th>Time</th><th>Classroom</th><th>Location</th><th>Subject / Module</th><th>Lecturer</th></tr>') + 100 # increment to skip past first <tr>
+    s = 100 + page.find(
+        '<tr>'
+        + '<th>Date</th><th>Time</th><th>Classroom</th>'
+        + '<th>Location</th><th>Subject / Module</th><th>Lecturer</th>'
+        + '</tr>'
+    )   # increment to skip past first <tr>
+
     e = page.find('<p class="modified-date" >', s)
 
     if s == -1 or e == -1:
@@ -79,8 +103,14 @@ def get_timetable(intake, week_inc=0):
     section = page[s:e]
 
     # extract and print data
-    matches = re.findall(r'(<tr> (?:<td> [\s\w:.,\-\/\@\&]+ </td> ){6}?</tr>)', section)
-    modified = re.findall(r'Last modified: ([\s\w:]+)</p>', page[e:e+128])
+    matches = re.findall(
+        r'(<tr> (?:<td> [\s\w:.,\-\/\@\&]+ </td> ){6}?</tr>)',
+        section
+    )
+    modified = re.findall(
+        r'Last modified: ([\s\w:]+)</p>',
+        page[e:e+128]
+    )
 
     if len(modified) == 0:
         modified = None
@@ -88,7 +118,7 @@ def get_timetable(intake, week_inc=0):
         modified = modified[0].strip()
 
     last_date = str()
-    table     = str()
+    table = str()
 
     if len(matches) == 0:
         table = None
@@ -98,14 +128,25 @@ def get_timetable(intake, week_inc=0):
 
             # filter entries
             if (last_date != fields[0]):
-                table += '<tr class="section"><td colspan="4">' + fields[0] + '</td></tr>'
+                table += '<tr class="section"><td colspan="4">'
+                table += fields[0]
+                table += '</td></tr>'
                 last_date = fields[0]
 
-            table += '<tr><td>' + fields[1] + '</td><td>' + fields[3] + ' : ' + fields[2] + '</td><td>' + fields[4] + '</td><td>' + fields[5] +'</td></tr>'
+            table += '<tr>'
+            table += '<td>' + fields[1] + '</td>'
+            table += '<td>' + fields[3] + ' : ' + fields[2] + '</td>'
+            table += '<td>' + fields[4] + '</td>'
+            table += '<td>' + fields[5] + '</td>'
+            table += '</tr>'
 
-    return {'intake': intake,
-            'week': week.isoformat(),
-            'last_modified': modified,
-            'table': table
-            }
+    return {
+        'intake': intake,
+        'week': week.isoformat(),
+        'last_modified': modified,
+        'table': table
+    }
+
+
+
 
