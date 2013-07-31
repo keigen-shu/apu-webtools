@@ -104,7 +104,8 @@ def get_timetable(intake, week_inc=0):
 
     # extract and print data
     matches = re.findall(
-        r'(<tr> (?:<td> [\s\w:.,\-\/\@\&]+ </td> ){6}?</tr>)',
+        r'(<tr> (?:<td>[^\<\>]+</td> ){6}?</tr>)',
+#        r'(<tr> (?:<td> [\s\w:.,\-\/\@\&]+ </td> ){6}?</tr>)',
         section
     )
     modified = re.findall(
@@ -124,7 +125,8 @@ def get_timetable(intake, week_inc=0):
         table = None
     else:
         for entry in matches:
-            fields = re.findall(r'(?:<td> ([\s\w:.,\-\/\@\&]+) </td> )', entry)
+            fields = re.findall(r'(?:<td>([^\<\>]+)</td> )', entry)
+            # fields = re.findall(r'(?:<td> ([\s\w:.,\-\/\@\&]+) </td> )', entry)
 
             # filter entries
             if (last_date != fields[0]):

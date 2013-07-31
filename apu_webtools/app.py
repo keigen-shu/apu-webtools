@@ -1,8 +1,10 @@
 from __future__ import absolute_import, unicode_literals
 from flask import Flask, render_template
+from apu_webtools.flask_gzip import Gzip
 from apu_webtools.timetable import get_timetable, get_timetable_intake_list
 
 app = Flask(__name__)
+zip = Gzip(app, 9)
 
 
 @app.route("/")
