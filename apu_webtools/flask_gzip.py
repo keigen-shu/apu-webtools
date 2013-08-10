@@ -1,7 +1,3 @@
-# vim: et:ts=4:sw=4
-# Gzip extension for Flask
-# based on github.com/elasticsales/Flask-gzip
-
 import gzip
 import StringIO
 from flask import request
