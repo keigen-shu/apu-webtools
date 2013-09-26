@@ -74,14 +74,11 @@ def get_timetable(intake, week_inc=0):
     week = week + datetime.timedelta(days=-week.weekday(), weeks=week_inc)
 
     # send request and get page
-    url = 'http://webspace.apiit.edu.my/intake-timetable/intake-result.php'
-    data = urllib.urlencode({
-        'week': week.isoformat() + '.xml',
-        'selectIntakeAll': intake
-    })
+    url = 'http://webspace.apiit.edu.my/intake-timetable/intake-result.php' + \
+        '?week=' + week.isoformat() + '&selectIntakeAll=' + intake
 
     try:
-        response = urllib.urlopen(url, data)
+        response = urllib.urlopen(url)
     except timeout:
         exit('Error: URL request timeout')
 
