@@ -1,11 +1,11 @@
 {% extends "_base.html" %}
 
-{% block page_title %}Intake list{% endblock %}
+{% block page_title %}Lecturer list{% endblock %}
 
 {% block content %}
 <div id="timetable">
-    <h1>Intake list</h1>
-    <p>Select an intake from below. If you don't like to scan the list, just put your intake ID on the link address.</p>
+    <h1>Lecturer list</h1>
+    <p>Select a lecturer from below. If you don't like to scan the list, just put the full name of the lecturer in all caps on the link address.</p>
 
     <table>
         <tbody>
@@ -15,10 +15,10 @@
                 {% endfor %}
             </tr>
             <tr>
-                {% for intake_list in intake_lists %}
+                {% for list in lecturer_lists %}
                 <td><ul style="list-style:none;">
-                        {% for intake in intake_list %}
-                        <li><a href="{{ url_for('intake_timetable_now', intake=intake) }}">{{ intake }}</a></li>
+                        {% for name in list %}
+                        <li><a href="{{ url_for('lecturer_timetable', lecturer=name, week=0) }}">{{ name }}</a></li>
                         {% endfor %}
                 </ul></td>
                 {% endfor %}

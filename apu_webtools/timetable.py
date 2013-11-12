@@ -2,38 +2,14 @@
 # written by moogtrian
 
 # That is all the configuration needed. The script will take it from here.
-from socket import timeout
-import datetime
-import re
-import urllib
+import datetime, re
 
+from apuws import db
+from apuws.util import get_first_weekday, get_last_weekday
+from flask import url_for
 
 def get_timetable_intake_list():
-    # send request and get page
-    try:
-        response = urllib.urlopen(
-            'http://webspace.apiit.edu.my/intake-timetable/')
-    except timeout:
-        exit('Error: URL request timeout')
-
-    page = response.read()
-
-    s = page.find('<script language="javascript" type="text/javascript">')
-    e = page.find('//', s)
-
-    if s == -1 or e == -1:
-        exit("Error: could not find page pattern.")
-
-    s = page[s:e].find('data')
-
-    section = page[s:e]
-
-    # extract and print data
-    matches = re.findall(r"'([A-Z0-9\{\}]+)'", section)
-
-    if len(matches) == 0:
-        exit('Host intake list is empty')
-
+    intakes = db.session.query(db.Intake.code).all()
     groups = [
         'UCM / UCP',
         'UCDF / UCFF',
@@ -56,10 +32,10 @@ def get_timetable_intake_list():
     for i in range(len(groups)):
         intake_lists.append([])
 
-    for intake in sorted(matches):
+    for intake in intakes:
         for i in range(len(groups)):
-            if (re.match(regexes[i], intake[:5])):
-                intake_lists[i].append(intake)
+            if (re.match(regexes[i], intake.code[:5])):
+                intake_lists[i].append(intake.code)
                 break
 
     return {
@@ -68,83 +44,168 @@ def get_timetable_intake_list():
     }
 
 
-def get_timetable(intake, week_inc=0):
-    # find out the Monday date of the week we want
-    week = datetime.date.today()
-    week = week + datetime.timedelta(days=-week.weekday(), weeks=week_inc)
+def get_timetable_by_intake(intake, week_offset=0):
+    entries = db.session.query(db.Entry)\
+            .filter(db.Entry.intake_code == intake)\
+            .filter(db.Entry.day >= get_first_weekday(week_offset=week_offset))\
+            .filter(db.Entry.day <= get_last_weekday(week_offset=week_offset))\
+            .all()
 
-    # send request and get page
-    url = 'http://webspace.apiit.edu.my/intake-timetable/intake-result.php' + \
-        '?week=' + week.isoformat() + '&selectIntakeAll=' + intake
-
-    try:
-        response = urllib.urlopen(url)
-    except timeout:
-        exit('Error: URL request timeout')
-
-    page = response.read()
-
-    # cut out the time table from the whole page
-    s = 100 + page.find(
-        '<tr>'
-        + '<th>Date</th><th>Time</th><th>Classroom</th>'
-        + '<th>Location</th><th>Subject / Module</th><th>Lecturer</th>'
-        + '</tr>'
-    )   # increment to skip past first <tr>
-
-    e = page.find('<p class="modified-date" >', s)
-
-    if s == -1 or e == -1:
-        exit("Error: could not find page pattern.")
-
-    section = page[s:e]
-
-    # extract and print data
-    matches = re.findall(
-        r'(<tr> (?:<td>[^\<\>]+</td> ){6}?</tr>)',
-#        r'(<tr> (?:<td> [\s\w:.,\-\/\@\&]+ </td> ){6}?</tr>)',
-        section
-    )
-    modified = re.findall(
-        r'Last modified: ([\s\w:]+)</p>',
-        page[e:e+128]
-    )
-
-    if len(modified) == 0:
-        modified = None
-    else:
-        modified = modified[0].strip()
-
-    last_date = str()
+    last_date = datetime.date(1957,1,1)
     table = str()
 
-    if len(matches) == 0:
-        table = None
-    else:
-        for entry in matches:
-            fields = re.findall(r'(?:<td>([^\<\>]+)</td> )', entry)
-            # fields = re.findall(r'(?:<td> ([\s\w:.,\-\/\@\&]+) </td> )', entry)
+    for entry in entries:
+        # filter entries
+        if (last_date != entry.day):
+            table += '<tr class="section"><td colspan="4">'
+            table += entry.day.strftime('%a, %d %B %Y')
+            table += '</td></tr>'
+            last_date = entry.day
 
-            # filter entries
-            if (last_date != fields[0]):
-                table += '<tr class="section"><td colspan="4">'
-                table += fields[0]
-                table += '</td></tr>'
-                last_date = fields[0]
-
-            table += '<tr>'
-            table += '<td>' + fields[1] + '</td>'
-            table += '<td>' + fields[3] + ' : ' + fields[2] + '</td>'
-            table += '<td>' + fields[4] + '</td>'
-            table += '<td>' + fields[5] + '</td>'
-            table += '</tr>'
+        table += '<tr>'
+        table += '<td>' + db.unpack_timeslot(entry.time_slot) + '</td>'
+        table += '<td><a href="{:}">{:}</a></td>'.format(url_for('room_timetable_now', room=entry.location.room), entry.location.room)
+        table += '<td>' + entry.module.code + '</td>'
+        table += '<td><a href="{:}">{:}</a></td>'.format(url_for('lecturer_timetable', lecturer=entry.lecturer.name, week=0), entry.lecturer.name)
+        table += '</tr>'
 
     return {
         'intake': intake,
-        'week': week.isoformat(),
-        'last_modified': modified,
         'table': table
     }
+
+def get_lecturer_list():
+    lecturers = db.session.query(db.Lecturer.name).all()
+    lecturers = sorted(zip(*lecturers)[0])
+
+    groups = [
+        '[A-L]',
+        '[L-Z]'
+    ]
+    regexes = [
+        r'([ABCDEFGHIJKL])',
+        r'.+'
+    ]
+
+    lecturer_lists = []
+
+    for i in range(len(groups)):
+        lecturer_lists.append([])
+
+    for lecturer in lecturers:
+        for i in range(len(groups)):
+            if (re.match(regexes[i], lecturer[:2])):
+                lecturer_lists[i].append(lecturer)
+                break
+
+    return {
+        'groups': groups,
+        'lecturer_lists': lecturer_lists
+    }
+
+def get_timetable_by_lecturer(lecturer, week_offset=0):
+    entries = db.session.query(db.Entry)\
+            .filter(db.Entry.day >= get_first_weekday(week_offset=week_offset))\
+            .filter(db.Entry.day <= get_last_weekday(week_offset=week_offset))\
+            .filter(db.Lecturer.id == db.Entry.lecturer_id)\
+            .filter(db.Lecturer.name == lecturer)\
+            .order_by(db.Entry.day)\
+            .order_by(db.Entry.time_slot)\
+            .all()
+
+    last_date = datetime.date(1957,1,1)
+    table = str()
+
+    for entry in entries:
+        # filter entries
+        if (last_date != entry.day):
+            table += '<tr class="section"><td colspan="4">'
+            table += entry.day.strftime('%a, %d %B %Y')
+            table += '</td></tr>'
+            last_date = entry.day
+
+        table += '<tr>'
+        table += '<td>' + db.unpack_timeslot(entry.time_slot) + '</td>'
+        table += '<td><a href="{:}">{:}</a></td>'.format(url_for('room_timetable_now', room=entry.location.room), entry.location.room)
+        table += '<td>' + entry.module.code + '</td>'
+        table += '<td><a href="{:}">{:}</a></td>'.format(url_for('intake_timetable_now', intake=entry.intake.code), entry.intake.code)
+        table += '</tr>'
+
+    return {
+        'lecturer': lecturer,
+        'table': table
+    }
+
+
+def get_room_list():
+    rooms = db.session.query(db.Location.room).all()
+    rooms = sorted(zip(*rooms)[0])
+
+    groups = [
+        '[TPM]',
+        '[ENT3]',
+        '[]'
+    ]
+    regexes = [
+        r'(TPM)',
+        r'(ENT3)',
+        r'.+'
+    ]
+
+    room_lists = []
+
+    for i in range(len(groups)):
+        room_lists.append([])
+
+    for room in rooms:
+        for i in range(len(groups)):
+            if (re.match(regexes[i], room[:5])):
+                room_lists[i].append(room)
+                break
+
+    return {
+        'groups': groups,
+        'room_lists': room_lists
+    }
+
+def get_timetable_by_room(room, week_offset=0):
+    entries = db.session.query(db.Entry)\
+            .filter(db.Entry.day >= get_first_weekday(week_offset=week_offset))\
+            .filter(db.Entry.day <= get_last_weekday(week_offset=week_offset))\
+            .filter(db.Location.id == db.Entry.location_id)\
+            .filter(db.Location.room == room)\
+            .order_by(db.Entry.day)\
+            .order_by(db.Entry.time_slot)\
+            .all()
+
+    last_date = datetime.date(1957,1,1)
+    table = str()
+
+    for entry in entries:
+        # filter entries
+        if (last_date != entry.day):
+            table += '<tr class="section"><td colspan="4">'
+            table += entry.day.strftime('%a, %d %B %Y')
+            table += '</td></tr>'
+            last_date = entry.day
+
+        table += '<tr>'
+        table += '<td>' + db.unpack_timeslot(entry.time_slot) + '</td>'
+        table += '<td><a href="{:}">{:}</a></td>'.format(url_for('intake_timetable_now', intake=entry.intake.code), entry.intake.code)
+        table += '<td>' + entry.module.code + '</td>'
+        table += '<td><a href="{:}">{:}</a></td>'.format(url_for('lecturer_timetable', lecturer=entry.lecturer.name, week=0), entry.lecturer.name)
+        table += '</tr>'
+
+    return {
+        'room': room,
+        'table': table
+    }
+
+
+
+
+
+
 
 
 

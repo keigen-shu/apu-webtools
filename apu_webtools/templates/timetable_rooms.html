@@ -1,0 +1,29 @@
+{% extends "_base.html" %}
+
+{% block page_title %}Room list{% endblock %}
+
+{% block content %}
+<div id="timetable">
+    <h1>Room list</h1>
+    <p>Select a room from below. If you don't like to scan the list, just put the name of room on the link address.</p>
+
+    <table>
+        <tbody>
+            <tr>
+                {% for group in groups %}
+                <th>{{ group }}</th>
+                {% endfor %}
+            </tr>
+            <tr>
+                {% for list in room_lists %}
+                <td style="width: 33%"><ul style="list-style:none;">
+                        {% for name in list %}
+                        <li><a href="{{ url_for('room_timetable_now', room=name) }}">{{ name }}</a></li>
+                        {% endfor %}
+                </ul></td>
+                {% endfor %}
+            </tr>
+        </tbody>
+    </table>
+</div>
+{% endblock %}

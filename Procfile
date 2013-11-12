@@ -1,1 +1,1 @@
-web: python -m apu_webtools
+web: python -m apuws
